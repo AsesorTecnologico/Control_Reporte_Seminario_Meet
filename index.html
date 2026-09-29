@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sectorizador de Alumnos</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="hero">
+      <div class="badge">SACO OLIVEROS</div>
+      <h1>Sectorizador de alumnos por sede y grado</h1>
+      <p>
+        Carga el padrón institucional y un archivo .md/.txt.
+        El sistema detecta nombres únicos, los cruza con el padrón
+        y contabiliza automáticamente 1.º y 2.º de secundaria por sede.
+      </p>
+    </header>
+
+    <main>
+      <section class="panel">
+        <h2>1. Cargar padrón maestro</h2>
+        <p class="help">
+          Estructura obligatoria:
+          <strong>SEDE, NIVEL, TURNO, TIPO GRADO, GRADO, SECCION, NOMBRE AULA, DOCUMENTO, NOMBRES</strong>
+        </p>
+
+        <div class="upload-row">
+          <input id="padronFile" type="file" accept=".xlsx,.xls,.csv">
+          <div id="padronStatus" class="status">Sin archivo cargado.</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>2. Cargar archivo de nombres</h2>
+        <p class="help">
+          Admite archivos <strong>.md</strong> o <strong>.txt</strong>.
+          Para líneas del tipo <em>NOMBRE DEL ALUMNO: mensaje</em>,
+          se toma únicamente el nombre.
+        </p>
+
+        <div class="upload-row">
+          <input id="mdFile" type="file" accept=".md,.txt,text/markdown,text/plain">
+          <div id="mdStatus" class="status">Sin archivo cargado.</div>
+        </div>
+
+        <div class="options">
+          <label>
+            <input type="checkbox" id="soloSecundaria" checked>
+            Considerar solo nivel Secundaria
+          </label>
+
+          <label>
+            Coincidencia mínima
+            <select id="umbral">
+              <option value="1">Exacta</option>
+              <option value="0.92" selected>Alta (92%)</option>
+              <option value="0.85">Flexible (85%)</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button id="procesarBtn" class="btn primary" disabled>Validar y sectorizar</button>
+          <button id="limpiarBtn" class="btn secondary">Limpiar</button>
+          <button id="exportarBtn" class="btn secondary" disabled>Exportar a Excel</button>
+        </div>
+      </section>
+
+      <section id="resumenSection" class="panel hidden">
+        <h2>Resumen de validación</h2>
+
+        <div class="kpis">
+          <div class="kpi">
+            <span>Nombres únicos detectados</span>
+            <strong id="kpiUnicos">0</strong>
+          </div>
+
+          <div class="kpi">
+            <span>Alumnos ubicados</span>
+            <strong id="kpiUbicados">0</strong>
+          </div>
+
+          <div class="kpi">
+            <span>No ubicados</span>
+            <strong id="kpiNoUbicados">0</strong>
+          </div>
+
+          <div class="kpi">
+            <span>Sedes encontradas</span>
+            <strong id="kpiSedes">0</strong>
+          </div>
+        </div>
+      </section>
+
+      <section id="nombresUnicosSection" class="panel hidden">
+        <div class="section-head">
+          <div>
+            <h2>Nombres únicos detectados</h2>
+            <p class="help">
+              Todos los nombres extraídos del archivo aparecen una sola vez.
+            </p>
+          </div>
+
+          <input id="buscarNombre" type="search" placeholder="Buscar alumno...">
+        </div>
+
+        <div class="table-wrap">
+          <table id="nombresUnicosTabla">
+            <thead>
+              <tr>
+                <th>N.°</th>
+                <th>NOMBRE DETECTADO</th>
+                <th>ESTADO</th>
+                <th>SEDE</th>
+                <th>GRADO</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="resultadoSection" class="panel hidden">
+        <div class="section-head">
+          <div>
+            <h2>Resultado por sede</h2>
+            <p class="help">
+              Se contabilizan solamente los alumnos ubicados en 1.º o 2.º de secundaria.
+            </p>
+          </div>
+
+          <input id="buscarSede" type="search" placeholder="Buscar sede...">
+        </div>
+
+        <div class="table-wrap">
+          <table id="resultadoTabla">
+            <thead>
+              <tr>
+                <th>N.°</th>
+                <th>SEDE</th>
+                <th>1.º SECUNDARIA</th>
+                <th>2.º SECUNDARIA</th>
+                <th>CANTIDAD TOTAL</th>
+              </tr>
+            </thead>
+
+            <tbody></tbody>
+
+            <tfoot>
+              <tr>
+                <th></th>
+                <th>TOTAL GENERAL</th>
+                <th id="total1">0</th>
+                <th id="total2">0</th>
+                <th id="totalGeneral">0</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
+
+      <section id="noUbicadosSection" class="panel hidden">
+        <h2>Nombres no ubicados en el padrón</h2>
+        <p class="help">
+          Estos nombres se muestran para revisión y no se contabilizan en el resultado por sede.
+        </p>
+        <div id="noUbicados" class="chips"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
